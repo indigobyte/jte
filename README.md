@@ -153,3 +153,19 @@ No further dependencies required! Check out the [syntax documentation](DOCUMENTA
 - <a href="https://github.com/casid/jte-javalin-tutorial">Javalin website example with login and multiple languages</a>
 - <a href="https://www.mitchdennett.com/">Mitch Dennett's Blog</a>
 - <a href="https://flowcrypt.com/docs/business/enterprise-admin-panel.html">FlowCrypt Admin Panel</a>
+
+## Building new version
+- Update version:
+```
+mvn versions:set -DnewVersion=VERSION_NUMBER -N versions:update-child-modules -DgenerateBackupPoms=false
+```
+- Clone repository to separate folder, e.g. `C:\mvn-repo`.
+- Switch to `mvn-repo` branch in that folder.
+- Run
+```
+mvn clean install -T 1C -DskipTests -DmvnRepo=C:\\mvn-repo
+```
+(`\\` is escaped for Cygwin)
+- Go to folder `C:\mvn-repo`.
+- Add new files to commit, then commit and push `mvn-repo` branch to server.
+- 

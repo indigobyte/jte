@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>gg.jte</groupId>
+    <artifactId>jte-parent</artifactId>
+    <version>1.11.2-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>jte-parent</name>
+    <description>A template engine using plain Java code.</description>
+    <url>http://jte.gg</url>
+    <developers>
+        <developer>
+            <id>casid</id>
+            <name>Andreas Hager</name>
+            <email>andy@mazebert.com</email>
+            <roles>
+                <role>Project-Administrator</role>
+                <role>Developer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/casid/jte.git</url>
+    </scm>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <junit.jupiter.version>5.6.2</junit.jupiter.version>
+        <jacoco.version>0.8.5</jacoco.version>
+        <argLine>-Dfile.encoding=UTF-8</argLine>
+        <copy.rename.maven.plugin.version>1.0.1</copy.rename.maven.plugin.version>
+    </properties>
+
+    <modules>
+        <module>jte-runtime</module>
+        <module>jte</module>
+        <module>jte-kotlin</module>
+        <module>jte-watcher</module>
+        <module>jte-maven-plugin</module>
+        <module>jte-jsp-converter</module>
+        <module>test/jte-runtime-test</module>
+        <module>test/jte-runtime-test-kotlin</module>
+        <module>test/jte-runtime-cp-test</module>
+        <module>test/jte-hotreload-test</module>
+        <module>test/jte-test-report</module>
+        <module>jte-deploy-nexus</module>
+    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.20.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Test -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
+
+            <!-- Javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Sources -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- Code coverage -->
+        <profile>
+            <id>coverage</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.version}</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Release profile -->
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>gpg.passphrase</name>
+                </property>
+            </activation>
+
+            <build>
+                <plugins>
+
+                    <!-- GPG signing -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Nexus Staging -->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.6</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            <stagingProgressTimeoutMinutes>120</stagingProgressTimeoutMinutes>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Installation to local folder -->
+        <profile>
+            <id>setInstallationFileForChildPom</id>
+            <activation>
+                <property>
+                    <name>mvnRepo</name>
+                </property>
+                <file>
+                    <exists>${basedir}/src</exists>
+                </file>
+            </activation>
+            <properties>
+                <file.to.install>${build.directory}/${build.finalName}.jar</file.to.install>
+            </properties>
+        </profile>
+        <profile>
+            <id>setInstallationFileForParentPom</id>
+            <activation>
+                <property>
+                    <name>mvnRepo</name>
+                </property>
+                <file>
+                    <missing>${basedir}/src</missing>
+                </file>
+            </activation>
+            <properties>
+                <file.to.install>pom.xml</file.to.install>
+            </properties>
+        </profile>
+        <profile>
+            <id>installToMvnRepo</id>
+            <activation>
+                <property>
+                    <name>mvnRepo</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.coderplus.maven.plugins</groupId>
+                        <artifactId>copy-rename-maven-plugin</artifactId>
+                        <version>${copy.rename.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>mvn-repo-install-1</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>rename</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceFile>${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata.xml
+                                    </sourceFile>
+                                    <destinationFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata-local.xml
+                                    </destinationFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>mvn-repo-install-2</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>rename</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceFile>${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata.xml.md5
+                                    </sourceFile>
+                                    <destinationFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata-local.xml.md5
+                                    </destinationFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>mvn-repo-install-3</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>rename</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata.xml.sha1
+                                    </sourceFile>
+                                    <destinationFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata-local.xml.sha1
+                                    </destinationFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>mvn-repo-install-5</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>rename</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata-local.xml
+                                    </sourceFile>
+                                    <destinationFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata.xml
+                                    </destinationFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>mvn-repo-install-6</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>rename</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata-local.xml.md5
+                                    </sourceFile>
+                                    <destinationFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata.xml.md5
+                                    </destinationFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>mvn-repo-install-7</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>rename</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata-local.xml.sha1
+                                    </sourceFile>
+                                    <destinationFile>
+                                        ${mvnRepo}/gg/jte/${project.artifactId}/maven-metadata.xml.sha1
+                                    </destinationFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-install-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>default-install</id>
+                                <phase>none</phase>
+                            </execution>
+                            <execution>
+                                <id>mvn-repo-install-4</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <file>${file.to.install}</file>
+                                    <generatePom>false</generatePom>
+                                    <pomFile>pom.xml</pomFile>
+                                    <localRepositoryPath>${mvnRepo}</localRepositoryPath>
+                                    <createChecksum>true</createChecksum>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
